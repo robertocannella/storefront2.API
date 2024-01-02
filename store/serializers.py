@@ -10,18 +10,19 @@ class CollectionSerializer(serializers.ModelSerializer):
         fields = ['id','title']
 
 
-class ProductSerializer(serializers.Serializer):
-    id = serializers.IntegerField()
-    title = serializers.CharField(max_length=255)
+class ProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ['id','title','description','slug','inventory','price','price_with_tax','collection']
     price = serializers.DecimalField(max_digits=10, decimal_places=2,source='unit_price')
     price_with_tax = serializers.SerializerMethodField(method_name='calculate_tax')
     # collection = serializers.PrimaryKeyRelatedField(queryset=Collection.objects.all)
     # collection = serializers.StringRelatedField()
     # collection = CollectionSerializer()
-    collection = serializers.HyperlinkedRelatedField(
-            queryset=Collection.objects.all(),
-            view_name='collection-detail'
-    )
+    # collection = serializers.HyperlinkedRelatedField(
+    #         queryset=Collection.objects.all(),
+    #         view_name='collection-detail'
+    # )
 
     def calculate_tax(self, product):
         tax_rate = Decimal('1.1')  # Using a string to initialize ensures precision
