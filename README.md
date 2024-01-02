@@ -133,3 +133,50 @@ def product_list(request):
       return Response(serializer.data)
   ```
   
+# Serializing Relationships 
+This can be done in 1 of 4 different ways.
+
+* Primary Key
+  ```
+  collection = serializers.PrimaryKeyRelatedField(queryset=Collection.objects.all)
+  ```
+* String
+
+  ```
+  collection = serializers.StringRelatedField()
+  ```
+* Nested Object
+
+  ```
+  collection = CollectionSerializer()
+  ```
+* HyperLink
+  
+  ``` 
+  collection = serializers.HyperlinkedRelatedField(
+        queryset=Collection.objects.all(),
+        view_name='collection-detail'
+  )
+  ```
+Here, all methods exist, some are commented out.
+
+``` 
+class CollectionSerializer(serializers.Serializer):
+  id = serializers.IntegerField()
+  title = serializers.CharField(max_length=255)
+
+
+class ProductSerializer(serializers.Serializer):
+  id = serializers.IntegerField()
+  title = serializers.CharField(max_length=255)
+  price = serializers.DecimalField(max_digits=10, decimal_places=2,source='unit_price')
+  price_with_tax = serializers.SerializerMethodField(method_name='calculate_tax')
+  # collection = serializers.PrimaryKeyRelatedField(queryset=Collection.objects.all)
+  # collection = serializers.StringRelatedField()
+  # collection = CollectionSerializer()
+  collection = serializers.HyperlinkedRelatedField(
+          queryset=Collection.objects.all(),
+          view_name='collection-detail'
+  )
+```
+
