@@ -1,3 +1,4 @@
+from django.db.models import Count
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -42,7 +43,7 @@ def product_detail(request, product_id):
 @api_view(['GET','POST'])
 def collection_list(request):
     if request.method == 'GET':
-        collections = Collection.objects.all()
+        collections = Collection.objects.annotate(product_count=Count('products'))
         serializer = CollectionSerializer(collections, many=True)
         return Response(serializer.data,status=200)
     elif request.method == 'POST':
@@ -52,14 +53,17 @@ def collection_list(request):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@api_view(['GET','PUT','DELETE'])
+@api_view(['GET','PUT','DELETE','PATCH'])
 def collection_detail(request, pk):
-    collection = get_object_or_404(Collection, pk=pk)
+    collection = get_object_or_404(
+        Collection.objects.annotate(products_count=Count('products')), pk=pk)
     if request.method == 'GET':
         serializer = CollectionSerializer(collection)
         return Response(serializer.data)
-    elif request.method == 'PUT':
-        serializer = ProductSerializer(collection, data=request.data)
+    elif request.method in ['PUT', 'PATCH']:
+        # For PATCH request, use partial=True to allow partial updates
+        partial = request.method == 'PATCH'
+        serializer = CollectionSerializer(collection, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
